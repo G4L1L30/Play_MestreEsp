@@ -46,7 +46,7 @@ void exibe_logReset()
     Serial.print(" |");
   }
   Serial.println("]");
-  delay(3000);
+  //delay(3000);
 }
 
 void reset(int qual)

@@ -6,15 +6,6 @@ extern "C"
   uint8_t temprature_sens_read();
 }
 
-//SemaphoreHandle_t httpMutex = xSemaphoreCreateMutex();
-//SemaphoreHandle_t fileMutex = xSemaphoreCreateMutex();
-
-/*##################################### FUNCOES E MANIPULACAO DE ARQUIVOS ###########################################################*/
-time_t getTime_t()
-{
-  return timeServer + time(nullptr) - timeServerResetNullptr;
-}
-
 void setupWatchDog()
 {
   try
@@ -23,7 +14,7 @@ void setupWatchDog()
     timer = timerBegin(0, 80, true);
     timerAttachInterrupt(timer, &resetModule, true);
     //timer,tempo(us),repeticao
-    timerAlarmWrite(timer, 2000000, true);
+    timerAlarmWrite(timer, 5000000, true);
     timerAlarmEnable(timer); //habilita a interrupcao
   }
   catch (...)
@@ -31,6 +22,7 @@ void setupWatchDog()
     resetModule();
   }
 }
+
 void loopWatchDog()
 {
   try
@@ -97,17 +89,15 @@ void setup()
 {
   try
   {
-
-    Serial.begin(115200);
-    dataNow = localtime(&timeNow);
-    xTaskCreatePinnedToCore(setupcoreZero, "setupcoreZero", 8192, NULL, 0, NULL, 0);
-    // configura WatchDog
-    setupWatchDog();
-    Wire.begin(SDA, SCL);
-
     inicia_PinMode();
     pinMode(ent_sensor, INPUT);
     pinMode(sd_sensor, OUTPUT);
+
+    Serial.begin(115200);
+    Wire.begin(SDA, SCL);
+    xTaskCreatePinnedToCore(setupcoreZero, "setupcoreZero", 8192, NULL, 0, NULL, 0);
+    // configura WatchDog
+    setupWatchDog();
   }
   catch (...)
   {
@@ -120,15 +110,13 @@ void loop()
   try
   {
     loopWatchDog();
-    timeNow = getTime_t();
-    dataNow = localtime(&timeNow);
-    /*for(int i = 0; i < tam_slave; i++)
+    for(int i = 0; i < tam_slave; i++)
     {
       ativo = digitalRead(ent_sensor);
       digitalWrite(sd_sensor, ativo);
       escravo(slave[i]);
       delay(200);
-    }*/
+    }
     delay(2);
   }
   catch (...)
