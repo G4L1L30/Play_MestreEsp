@@ -13,26 +13,26 @@ int pin_reset[2] = {rst_s0, rst_s1};
 int log_reset[2] = {0, 0};
 
 char dado[50];
+String apontamentos;
 int conta = 0, ativo;
 
-int tam_slave = sizeof(slave)/sizeof(int);
-int tam_pin = sizeof(pin_reset)/sizeof(int);
-int tam_log = sizeof(log_reset)/sizeof(int);
+int tam_slave = sizeof(slave) / sizeof(int);
+int tam_pin = sizeof(pin_reset) / sizeof(int);
+int tam_log = sizeof(log_reset) / sizeof(int);
 
 void inicia_PinMode()
 {
-  for(int i = 0; i < tam_pin; i++)
+  for (int i = 0; i < tam_pin; i++)
   {
     pinMode(pin_reset[i], OUTPUT);
     digitalWrite(pin_reset[i], HIGH);
   }
 }
 
-
 int procura_PosSlave(int quem)
 {
   int i = 0;
-  while(i < tam_slave && slave[i] != quem)
+  while (i < tam_slave && slave[i] != quem)
     i++;
   return i;
 }
@@ -40,7 +40,7 @@ int procura_PosSlave(int quem)
 void exibe_logReset()
 {
   Serial.print("[ ");
-  for(int i = 0; i < tam_log; i++)
+  for (int i = 0; i < tam_log; i++)
   {
     Serial.print(log_reset[i]);
     Serial.print(" |");
@@ -52,24 +52,35 @@ void exibe_logReset()
 void reset(int qual)
 {
   int pos = procura_PosSlave(qual);
-  if(slave[pos] == qual && estado[pos] == false)
+  if (slave[pos] == qual && estado[pos] == false)
   {
     estado[pos] = true;
     digitalWrite(pin_reset[pos], LOW);
     delay(1000);
     digitalWrite(pin_reset[pos], HIGH);
     log_reset[pos] += 1;
-    exibe_logReset(); 
+    exibe_logReset();
   }
 }
 
 void normaliza(int qual)
 {
   int pos = procura_PosSlave(qual);
-  if(slave[pos] == qual && estado[pos] == true) //duvidas aqui
+  if (slave[pos] == qual && estado[pos] == true) //duvidas aqui
     estado[pos] = false;
 }
 
+/*void envia(String info, String status)
+{
+  apontamentos[apontamentos->length()] = info;
+  status_apt[status_apt->length()] = status;
+  /*STATUS
+  true = apontada e confirmada
+  aguarda = apontada e nao confirmada
+  erro = nao apontada
+  
+}
+*/
 
 //FUNCAO PARA LER E ENVIAR DADOS AO(S) ESCRAVO(S)
 void escravo(int slave)
@@ -81,8 +92,8 @@ void escravo(int slave)
   int cont_info = 0, val_check, check_info = 0;
 
   //VAI PERGUNTAR SE TEM DADO
-  Wire.beginTransmission(slave); //abre a transmissao
-  Wire.write(0); // '0' pergunta se tem dado
+  Wire.beginTransmission(slave);   //abre a transmissao
+  Wire.write(0);                   // '0' pergunta se tem dado
   if (Wire.endTransmission() == 0) //fecha a transmissao e confirma que o maix bit esta vivo
   {
     normaliza(slave);
@@ -100,8 +111,8 @@ void escravo(int slave)
     if (tam_resp > 0) //Maix Bit tem Dados
     {
       //Requisitando dados
-      Wire.beginTransmission(slave); //abre a transmissao
-      Wire.write(1); // '1' Solicita a informacao
+      Wire.beginTransmission(slave);   //abre a transmissao
+      Wire.write(1);                   // '1' Solicita a informacao
       if (Wire.endTransmission() == 0) //fecha a transmissao e confirma que o maix bit esta vivo
       {
         Serial.print("0x");
@@ -111,8 +122,8 @@ void escravo(int slave)
         Wire.requestFrom(slave, tam_resp); //PEGANDO RESPOSTA
         while (Wire.available() && cont_info < tam_resp)
         {
-          leitura = Wire.read(); //pega inteiro por inteiro do canal I2C
-          letra = (char)leitura; //converte o inteiro para char
+          leitura = Wire.read();           //pega inteiro por inteiro do canal I2C
+          letra = (char)leitura;           //converte o inteiro para char
           informacao[cont_info++] = letra; //guarda na informacao
         }
         if (cont_info == tam_resp) //chegou todas as informações
@@ -120,12 +131,12 @@ void escravo(int slave)
           informacao[cont_info] = '\0'; //agora vira uma string que pode ser lida
 
           String split = strtok(informacao, ","); //primeiro split, para pegar a informacao
-          String check_sum = strtok(NULL, ","); //segundo split, para pegar o check sum da mensagem original
+          String check_sum = strtok(NULL, ",");   //segundo split, para pegar o check sum da mensagem original
 
           //converte o split para o dado
           for (i = 0; i < split.length(); i++)
           {
-            dado[i] = informacao[i];// aqui o dado é global esse sera enviado a requisicao WebAPI
+            dado[i] = informacao[i];          // aqui o dado é global esse sera enviado a requisicao WebAPI
             check_info += (int)informacao[i]; //aqui faz o check sum da mensagem recebida, ou seja, soma os inteiro da mensagem que chegou
           }
           dado[i] = '\0'; //Aqui esta a informação pode ser lida
@@ -142,9 +153,10 @@ void escravo(int slave)
             Serial.print(slave, HEX);
             Serial.print(" - Dado: ");
             Serial.println(dado);
+            /*if(info.length() <= 0)
+              info = dado;*/
             dado[0] = '\0';
           }
-
         }
         else //nao chegou toda as informações
         {
