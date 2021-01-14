@@ -1,7 +1,7 @@
 /*Variaveis*/
 hw_timer_t *timer = NULL;
 
-void IRAM_ATTR resetModule()//funcao que o temporizador ira chamar, para reiniciar o ESP32
+void IRAM_ATTR resetModule() //funcao que o temporizador ira chamar, para reiniciar o ESP32
 {
   ESP.restart();
 }
@@ -83,4 +83,3 @@ void loopWatchDog()
     resetModule();
   }
 }
-

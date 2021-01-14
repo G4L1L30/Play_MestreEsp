@@ -141,11 +141,11 @@ void escravo(int slave)
             Serial.print(slave, HEX);
             Serial.print(" - Dado: ");
             Serial.println(dado);
-            if(apontamentos.length() <= 0)
+            if (apontamentos.length() <= 0)
               apontamentos = dado;
             else
             {
-              if(sizeof(dado) > 0 && apontamentos != dado)
+              if (sizeof(dado) > 0 && apontamentos != dado)
                 apontamentos = dado;
             }
             dado[0] = '\0';

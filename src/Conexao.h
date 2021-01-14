@@ -30,7 +30,6 @@ time_t timeServerAtu, timeServerAtuRn, timeNow, timeServerDif, timeServer, timeS
 struct tm *dataNow;
 SemaphoreHandle_t httpMutex = xSemaphoreCreateMutex();
 
-                      
 time_t getTime_t()
 {
     return timeServer + time(nullptr) - timeServerResetNullptr;
@@ -121,44 +120,46 @@ void handleRoot()
         }
         String serverIndex =
             "<br> Milisegundos:  " + String(millis()) + " "
-            "<br> Clock:  " + String(clock()) + " "
-            "<br> Dado: " + String(apontamentos) + " "
-            
-            "<br><script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>"
-            "<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>"
-            "<input type='file' name='update'>"
-            "<input type='submit' value='Update'>"
-            "</form>"
-            "<div id='prg'>progress: 0%</div>"
-            "<script>"
-            "$('form').submit(function(e){"
-            "e.preventDefault();"
-            "var form = $('#upload_form')[0];"
-            "var data = new FormData(form);"
-            " $.ajax({"
-            "url: '/update',"
-            "type: 'POST',"
-            "data: data,"
-            "contentType: false,"
-            "processData:false,"
-            "xhr: function() {"
-            "var xhr = new window.XMLHttpRequest();"
-            "xhr.upload.addEventListener('progress', function(evt) {"
-            "if (evt.lengthComputable) {"
-            "var per = evt.loaded / evt.total;"
-            "$('#prg').html('progress: ' + Math.round(per*100) + '%');"
-            "}"
-            "}, false);"
-            "return xhr;"
-            "},"
-            "success:function(d, s) {"
-            "console.log('success!')"
-            "},"
-            "error: function (a, b, c) {"
-            "}"
-            "});"
-            "});"
-            "</script>";
+                                                        "<br> Clock:  " +
+            String(clock()) + " "
+                              "<br> Dado: " +
+            String(apontamentos) + " "
+
+                                   "<br><script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>"
+                                   "<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>"
+                                   "<input type='file' name='update'>"
+                                   "<input type='submit' value='Update'>"
+                                   "</form>"
+                                   "<div id='prg'>progress: 0%</div>"
+                                   "<script>"
+                                   "$('form').submit(function(e){"
+                                   "e.preventDefault();"
+                                   "var form = $('#upload_form')[0];"
+                                   "var data = new FormData(form);"
+                                   " $.ajax({"
+                                   "url: '/update',"
+                                   "type: 'POST',"
+                                   "data: data,"
+                                   "contentType: false,"
+                                   "processData:false,"
+                                   "xhr: function() {"
+                                   "var xhr = new window.XMLHttpRequest();"
+                                   "xhr.upload.addEventListener('progress', function(evt) {"
+                                   "if (evt.lengthComputable) {"
+                                   "var per = evt.loaded / evt.total;"
+                                   "$('#prg').html('progress: ' + Math.round(per*100) + '%');"
+                                   "}"
+                                   "}, false);"
+                                   "return xhr;"
+                                   "},"
+                                   "success:function(d, s) {"
+                                   "console.log('success!')"
+                                   "},"
+                                   "error: function (a, b, c) {"
+                                   "}"
+                                   "});"
+                                   "});"
+                                   "</script>";
 
         xSemaphoreGive(httpMutex);
         server.sendHeader("Connection", "close");
@@ -182,8 +183,9 @@ void handlegetLotes()
         timeServerAtuRn = time(nullptr);
         timeServerDif = getTime_t() - timeServerAtu;
 
-        if(server.arg("tql")!= ""){    
-        TQL = server.arg("tql").toInt()*1000;
+        if (server.arg("tql") != "")
+        {
+            TQL = server.arg("tql").toInt() * 1000;
         }
 
         if (timeServer == 0)
@@ -212,7 +214,7 @@ void handlegetLotes()
         }
         xSemaphoreGive(httpMutex);
         if (html == "") //nao existe lotes e o confirma lotes sera acionado  do contrario o confirma lotes sao acionados quando existe uma delecao de registros assim aumentando a seguranca do metodo contingencia
-        {                           
+        {
             tConfirmLote = clock(); // esta variavel indica se o sistema esta sem comunicacao e serve para entrar em modo critico de operacao e criacao de lotes
         }
         // envia logs no fim da cominucacao
@@ -242,7 +244,7 @@ void handleconfirmLotes()
                 if (s_aux[x] == '.')
                 {
                     if (s_aux1 != "")
-                    { 
+                    {
                         // apaga arquivo
                         lotes[s_aux1.toInt()] = ".";
                         xSemaphoreTake(httpMutex, portMAX_DELAY);
@@ -271,7 +273,7 @@ void handleconfirmLotes()
     }
 }
 
-boolean gravaLote()
+void gravaLote()
 {
     struct tm *dattime;
     try
@@ -314,25 +316,63 @@ boolean gravaLote()
             dattime = localtime(&timeFimLote);
             s_aux1 += String(dattime->tm_year + 1900) + "-" + String(dattime->tm_mon + 1) + "-" + String(dattime->tm_mday) + " " + String(dattime->tm_hour) + ":" + String(dattime->tm_min) + ":" + String(dattime->tm_sec) + "#";
             s_aux1 += apontamentos + "|";
-            if (id_prxlote == limiteVetor && lotes[0] != ".")// estado critico filas cheias
-            { 
+            if (id_prxlote == limiteVetor && lotes[0] != ".") // estado critico filas cheias
+            {
                 timeFimLote = timeIniLote;
-                return false;
             }
 
             if (lotes[id_prxlote] != ".")
             {
                 timeFimLote = timeIniLote;
-                return false;
             }
             lotes[id_prxlote] = s_aux1;
             id_prxlote = id_prxlote + 1;
-            return true;
         }
-        else
+    }
+    catch (...)
+    {
+        resetModule();
+    }
+}
+
+void handlelog()
+{
+    try
+    {
+        xSemaphoreTake(httpMutex, portMAX_DELAY);
+        String html = "";
+        int i = 0;
+        html += "<h1><BR>VARIAVEIS... </h1>";
+        /*########################################### VARIAVEIS DE CONFIGURACAO ################################################*/
+        html += "  millis()             =" + String(millis()) + "<br>";
+        //html += "  ipMaquina            =" + String(ETH.localIP()) + "<br>";
+        html += "  TQL                  =" + String(TQL) + "<br>";
+        html += "  c_aux                =" + String(c_aux) + "<br>";
+        html += "  s_aux                =" + String(s_aux) + "<br>";
+        html += "  id_prxlote           =" + String(id_prxlote) + "<br>";
+        html += " priFila               =" + String(priFila) + "<br>";
+        html += " loops                 =" + String(loops) + "<br>";
+        html += " tConfirmLote          =" + String(tConfirmLote) + "<br>";
+        html += " ttimeUltLote          =" + String(ttimeUltLote) + "<br>";
+        html += " timeServer            =" + String(timeServer) + "<br>";
+        html += " timeNow               =" + String(timeNow) + "<br>";
+        html += " timeFimLote           =" + String(timeFimLote) + "<br>";
+        html += " timeIniLote           =" + String(timeIniLote) + "<br>";
+        //html += " StatusWifi            =" + String(StatusWifi) + "<br>";
+        //html += " sinalWifi            =" + String(sinalWifi) + "<br>";
+        //VETORES
+        for (i = 0; i < limiteVetor; i++)
         {
-            return false;
+            if (lotes[i] != ".")
+            {
+                html += "lote[" + String(i) + "]    = " + lotes[i] + "<br>";
+            }
         }
+
+        server.setContentLength(html.length());
+        server.send(20000, "text/html", html);
+
+        xSemaphoreGive(httpMutex);
     }
     catch (...)
     {
@@ -356,7 +396,8 @@ void handleResetSlave()
 
         String serverIndex =
             "<br> Quantidade de resete slave 0: " + String(log_reset[0]) + " "
-            "<br> Quantidade de resete slave 1: " + String(log_reset[1]) + " ";
+                                                                           "<br> Quantidade de resete slave 1: " +
+            String(log_reset[1]) + " ";
 
         xSemaphoreGive(httpMutex);
         server.sendHeader("Connection", "close");
@@ -387,6 +428,7 @@ void setupWifiServer()
         server.on("/", handleRoot);
         server.on("/getLotes", handlegetLotes);
         server.on("/confirmLotes", handleconfirmLotes);
+        server.on("/log", handlelog);
         server.on("/reset", handleResetSlave);
         /*handling uploading firmware file */
         server.on(
