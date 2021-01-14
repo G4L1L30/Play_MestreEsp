@@ -1,13 +1,7 @@
 /*Variaveis*/
-int limiteVetor = 500;
-String lotes[500] = {"", "", ""};
-int id_prxlote = 0;
-int priFila = 0;
+hw_timer_t *timer = NULL;
 
-/*WatchDog*/
-
-//funcao que o temporizador ira chamar, para reiniciar o ESP32
-void IRAM_ATTR resetModule()
+void IRAM_ATTR resetModule()//funcao que o temporizador ira chamar, para reiniciar o ESP32
 {
   ESP.restart();
 }
@@ -62,20 +56,31 @@ String CtoS(const char *c)
   }
 }
 
-void setupParametros()
+void setupWatchDog()
 {
   try
   {
-    int i = 0;
-    for (i = 0; i < limiteVetor; i++)
-    {
-      lotes[i] = ".";
-    }
-    id_prxlote = 0;
-    priFila = 0;
+    timer = timerBegin(0, 80, true);
+    timerAttachInterrupt(timer, &resetModule, true);
+    //timer,tempo(us),repeticao
+    timerAlarmWrite(timer, 5000000, true);
+    timerAlarmEnable(timer); //habilita a interrupcao
   }
   catch (...)
   {
     resetModule();
   }
 }
+
+void loopWatchDog()
+{
+  try
+  {
+    timerWrite(timer, 0); //reseta o temporizador (alimenta o watchdog)
+  }
+  catch (...)
+  {
+    resetModule();
+  }
+}
+

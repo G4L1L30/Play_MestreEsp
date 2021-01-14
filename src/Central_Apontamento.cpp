@@ -1,39 +1,9 @@
 #include "Apontamento.h"
-#include "Conexao.h"
-// MEDE TEMPERATURA INTERNA DO ESP32
-extern "C"
+extern "C" // MEDE TEMPERATURA INTERNA DO ESP32
 {
   uint8_t temprature_sens_read();
 }
-
-void setupWatchDog()
-{
-  try
-  {
-
-    timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(timer, &resetModule, true);
-    //timer,tempo(us),repeticao
-    timerAlarmWrite(timer, 5000000, true);
-    timerAlarmEnable(timer); //habilita a interrupcao
-  }
-  catch (...)
-  {
-    resetModule();
-  }
-}
-
-void loopWatchDog()
-{
-  try
-  {
-    timerWrite(timer, 0); //reseta o temporizador (alimenta o watchdog)
-  }
-  catch (...)
-  {
-    resetModule();
-  }
-}
+#include "Conexao.h"
 
 //TASC NO COR ZERO DO ESP
 //void setupfileSistem(void * pvParameters){
@@ -109,15 +79,32 @@ void loop()
 {
   try
   {
+    tLoop = millis();
     loopWatchDog();
-    for(int i = 0; i < tam_slave; i++)
+
+    if (loops == 0)
+    {
+      loops = millis();
+    }
+
+    timeNow = getTime_t();
+    dataNow = localtime(&timeNow);
+
+    for (int i = 0; i < tam_slave; i++)
     {
       ativo = digitalRead(ent_sensor);
       digitalWrite(sd_sensor, ativo);
       escravo(slave[i]);
       delay(200);
     }
+    
+    //TRATAMENTO PARA QUEBRAR LOTE QUANDO O ESP ESTA EM CONTINGENCIA
+    if (clock() - tConfirmLote < TQL)//clock() - tConfirmLote) < (TQL) || tamanho da string do lote > limite da string do lote
+    { 
+      gravaLote();
+    }
     delay(2);
+    tLoop = millis() - tLoop;
   }
   catch (...)
   {

@@ -1,9 +1,10 @@
 #include <Wire.h>
 #include <Arduino.h>
+
 #define SDA 13
 #define SCL 16
 #define rst_s0 17
-#define rst_s1 19
+#define rst_s1 15
 #define ent_sensor 39
 #define sd_sensor 5
 
@@ -46,7 +47,6 @@ void exibe_logReset()
     Serial.print(" |");
   }
   Serial.println("]");
-  //delay(3000);
 }
 
 void reset(int qual)
@@ -66,21 +66,9 @@ void reset(int qual)
 void normaliza(int qual)
 {
   int pos = procura_PosSlave(qual);
-  if (slave[pos] == qual && estado[pos] == true) //duvidas aqui
+  if (slave[pos] == qual && estado[pos] == true)
     estado[pos] = false;
 }
-
-/*void envia(String info, String status)
-{
-  apontamentos[apontamentos->length()] = info;
-  status_apt[status_apt->length()] = status;
-  /*STATUS
-  true = apontada e confirmada
-  aguarda = apontada e nao confirmada
-  erro = nao apontada
-  
-}
-*/
 
 //FUNCAO PARA LER E ENVIAR DADOS AO(S) ESCRAVO(S)
 void escravo(int slave)
@@ -153,8 +141,13 @@ void escravo(int slave)
             Serial.print(slave, HEX);
             Serial.print(" - Dado: ");
             Serial.println(dado);
-            /*if(info.length() <= 0)
-              info = dado;*/
+            if(apontamentos.length() <= 0)
+              apontamentos = dado;
+            else
+            {
+              if(sizeof(dado) > 0 && apontamentos != dado)
+                apontamentos = dado;
+            }
             dado[0] = '\0';
           }
         }
