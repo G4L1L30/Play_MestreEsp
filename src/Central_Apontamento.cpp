@@ -97,12 +97,7 @@ void loop()
       escravo(slave[i]);
       delay(200);
     }
-
-    //TRATAMENTO PARA QUEBRAR LOTE QUANDO O ESP ESTA EM CONTINGENCIA
-    if ((clock() - tConfirmLote < TQL) || sizeof(lotes[id_prxlote]) > 255)
-    {
-      gravaLote();
-    }
+    gravaLote();
     delay(2);
     tLoop = millis() - tLoop;
   }

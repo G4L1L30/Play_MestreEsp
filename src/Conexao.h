@@ -30,6 +30,7 @@ time_t timeServerAtu, timeServerAtuRn, timeNow, timeServerDif, timeServer, timeS
 struct tm *dataNow;
 SemaphoreHandle_t httpMutex = xSemaphoreCreateMutex();
 
+
 time_t getTime_t()
 {
     return timeServer + time(nullptr) - timeServerResetNullptr;
@@ -302,31 +303,34 @@ void gravaLote()
                 timeServer = timeServerAtu;
                 timeServerDif = 0;
             }
-
             timeFimLote = getTime_t();
             dattime = localtime(&timeIniLote);
-
             // limite do vetor cheio, porem primeiro vetor liberado, aponta novamente para o primeiro vetor
-            if (id_prxlote == limiteVetor && lotes[0] == ".")
+            if (id_prxlote == limiteVetor)
             {
                 id_prxlote = 0;
             }
-
-            String s_aux1 = String(id_prxlote) + "#" + String(dattime->tm_year + 1900) + "-" + String(dattime->tm_mon + 1) + "-" + String(dattime->tm_mday) + " " + String(dattime->tm_hour) + ":" + String(dattime->tm_min) + ":" + String(dattime->tm_sec) + "#";
             dattime = localtime(&timeFimLote);
-            s_aux1 += String(dattime->tm_year + 1900) + "-" + String(dattime->tm_mon + 1) + "-" + String(dattime->tm_mday) + " " + String(dattime->tm_hour) + ":" + String(dattime->tm_min) + ":" + String(dattime->tm_sec) + "#";
-            s_aux1 += apontamentos + "|";
-            if (id_prxlote == limiteVetor && lotes[0] != ".") // estado critico filas cheias
+            String s_aux1 = apontamentos + "|";
+            //Procurar nos lotes se ja tem o apontamento.
+            //if(sizeof(lotes[id_prxlote]) - sizeof(s_aux1) < 0 || (lotes[id_prxlote] != s_aux1 && lotes[id_prxlote].substring(sizeof(lotes[id_prxlote]) - sizeof(s_aux1), sizeof(lotes[id_prxlote])) != s_aux1))//verificar substring
+            if(lotes[id_prxlote] != s_aux1)
             {
-                timeFimLote = timeIniLote;
+              if(lotes[id_prxlote] == ".")
+              {
+                lotes[id_prxlote] = s_aux1;
+              }
+              else
+              {
+                lotes[id_prxlote] += s_aux1;
+              }
+              
+              if ((clock() - tConfirmLote < TQL) || sizeof(lotes[id_prxlote]) + sizeof(s_aux1) > 255)
+              {//Nao esta em contigencia, ou atingiu o tamanho limite do lote
+                id_prxlote = id_prxlote + 1;
+              }
             }
-
-            if (lotes[id_prxlote] != ".")
-            {
-                timeFimLote = timeIniLote;
-            }
-            lotes[id_prxlote] = s_aux1;
-            id_prxlote = id_prxlote + 1;
+            
         }
     }
     catch (...)
