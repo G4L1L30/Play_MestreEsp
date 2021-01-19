@@ -4,6 +4,7 @@ extern "C" // MEDE TEMPERATURA INTERNA DO ESP32
   uint8_t temprature_sens_read();
 }
 #include "Conexao.h"
+bool espera;
 
 //TASC NO COR ZERO DO ESP
 //void setupfileSistem(void * pvParameters){
@@ -60,6 +61,9 @@ void setup()
   try
   {
     inicia_PinMode();
+    pinMode(ent_sensor, INPUT);
+    espera = false;
+
     Serial.begin(115200);
     Wire.begin(SDA, SCL);
     xTaskCreatePinnedToCore(setupcoreZero, "setupcoreZero", 8192, NULL, 0, NULL, 0);
@@ -86,13 +90,22 @@ void loop()
 
     timeNow = getTime_t();
     dataNow = localtime(&timeNow);
-
-    for (int i = 0; i < tam_slave; i++)
+    for (int i = 0; i < tam_slave && !espera; i++)
     {
       escravo(slave[i]);
       delay(200);
     }
-    gravaLote();
+    val_sensor = digitalRead(ent_sensor);
+    if(val_sensor == 0 && apontamentos.length() > 0)
+    {
+      gravaLote();
+      espera = true;
+    }
+    if(val_sensor == 1)
+      espera = false;
+
+    apontamentos.clear();
+      
     delay(2);
     tLoop = millis() - tLoop;
   }

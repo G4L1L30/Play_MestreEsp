@@ -5,11 +5,13 @@
 #define SCL 16
 #define rst_s0 17
 #define rst_s1 15
+#define ent_sensor 14
 
 int slave[2] = {0x32, 0x42};
 bool estado[2] = {false, false};
 int pin_reset[2] = {rst_s0, rst_s1};
 int log_reset[2] = {0, 0};
+int val_sensor;
 
 char dado[50];
 String apontamentos, inf_apt;

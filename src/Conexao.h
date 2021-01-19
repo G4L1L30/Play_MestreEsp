@@ -264,6 +264,8 @@ void handleconfirmLotes()
             s_aux = "Zero lotes enviados";
         }
         tConfirmLote = clock();
+        if(id_prxlote != 0)
+            id_prxlote = id_prxlote + 1;
         server.setContentLength(s_aux.length());
         server.send(200, "text/html", s_aux);
     }
@@ -271,39 +273,6 @@ void handleconfirmLotes()
     {
         resetModule();
     }
-}
-
-bool procura_AptLote(String apt)
-{
-    if (id_prxlote > 0)
-    {
-        char sub[255];
-        int pos = 0;
-        String atual = lotes[id_prxlote - 1]; //ultimo lote
-        for (int a = 0; a < atual.length() && lotes[id_prxlote - 1] != "."; a++)
-        {
-            if (atual[a] != '|')
-                sub[pos++] = atual[a];
-            else
-            {
-                sub[pos++] = atual[a]; //Para adiciona o pipe
-                sub[pos] = '\0';       //para que se torne uma string legivel
-
-                if (apt.compareTo(sub) == 0)
-                {
-                    //Serial.println("encontrou apontamente no lote ultimo");
-                    return true; //encontrou o apontamento no ultimo lote
-                }
-                else
-                {
-                    sub[0] = '\0'; //para garantir que limpou
-                    pos = 0;
-                }
-            }
-        }
-        return false;
-    }
-    return false;
 }
 
 void gravaLote()
@@ -346,8 +315,13 @@ void gravaLote()
             String s_aux1 = apontamentos + "|";
             //o indice do lotes é maior que 0 E o s_aux1 tem o codigo de barras E o
             //procura lotes nao encontrou esse codigo de barras no ultimo lote
-            if (s_aux1.length() > 1 && !procura_AptLote(s_aux1))
+            if (s_aux1.length() > 1)
             {
+                //atingiu o tamanho limite do lote
+                if (lotes[id_prxlote].length() + s_aux1.length() > 255)
+                {
+                    id_prxlote = id_prxlote + 1; //Atualiza o indice do lote
+                }
                 //Serial.println("nao encontrou apontamente no ultimo lote");
                 if (lotes[id_prxlote] == ".")
                 {
@@ -364,28 +338,8 @@ void gravaLote()
                 {
                     id_prxlote = id_prxlote + 1; //Atualiza o indice do lote
                 }
+                
             }
-            else
-            {
-                //s_aux1 tem o codigo de barras E esta em contigencia
-                if (s_aux1.length() > 1 && clock() - tConfirmLote > TQL)
-                {
-                    //verifica se o tamanho do ultimo lote mais o lote atual estoura a memoria
-                    if (lotes[id_prxlote].length() + s_aux1.length() > 255)
-                    {
-                        id_prxlote = id_prxlote + 1; //Atualiza o indice do lote
-                    }
-                    if (lotes[id_prxlote] == ".")
-                    {
-                        lotes[id_prxlote] = s_aux1;
-                    }
-                    else
-                    {
-                        lotes[id_prxlote] += s_aux1;
-                    }
-                }
-            }
-            apontamentos.clear();
         }
     }
     catch (...)
