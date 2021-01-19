@@ -60,9 +60,6 @@ void setup()
   try
   {
     inicia_PinMode();
-    pinMode(ent_sensor, INPUT);
-    pinMode(sd_sensor, OUTPUT);
-
     Serial.begin(115200);
     Wire.begin(SDA, SCL);
     xTaskCreatePinnedToCore(setupcoreZero, "setupcoreZero", 8192, NULL, 0, NULL, 0);
@@ -92,8 +89,6 @@ void loop()
 
     for (int i = 0; i < tam_slave; i++)
     {
-      ativo = digitalRead(ent_sensor);
-      digitalWrite(sd_sensor, ativo);
       escravo(slave[i]);
       delay(200);
     }

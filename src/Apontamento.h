@@ -5,8 +5,6 @@
 #define SCL 16
 #define rst_s0 17
 #define rst_s1 15
-#define ent_sensor 39
-#define sd_sensor 5
 
 int slave[2] = {0x32, 0x42};
 bool estado[2] = {false, false};
@@ -14,7 +12,7 @@ int pin_reset[2] = {rst_s0, rst_s1};
 int log_reset[2] = {0, 0};
 
 char dado[50];
-String apontamentos;
+String apontamentos, inf_apt;
 int conta = 0, ativo;
 
 int tam_slave = sizeof(slave) / sizeof(int);
@@ -141,22 +139,8 @@ void escravo(int slave)
             Serial.print(slave, HEX);
             Serial.print(" - Dado: ");
             Serial.println(dado);
-            if(apontamentos.length() <= 0 || apontamentos != dado) //Vazio ou Novo codigo de barras
-            {
-              apontamentos = dado;
-            }
-            else
-            {
-              apontamentos.clear();
-            }
-            /*if (apontamentos.length() <= 0)
-              apontamentos = dado;
-            else
-            {
-              if (sizeof(dado) > 0 && apontamentos != dado)
-                apontamentos = dado;
-            }*/
-            dado[0] = '\0';
+            inf_apt = apontamentos = dado;
+            dado[0] = '\0'; //Lmpar a variavel para que possa ser usada novamento
           }
         }
         else //nao chegou toda as informações

@@ -14,7 +14,7 @@ int ip[] = {0, 0, 0, 0};
 int gateway[] = {0, 0, 0, 0};
 int subnet[] = {0, 0, 0, 0};
 // TQL - tempo que define a quebra de lotes
-int id_prxlote = 0, priFila = 0, TQL = 5000, limiteVetor = 500;
+int id_prxlote = 0, priFila = 0, TQL = 60000, limiteVetor = 500;
 long int loops = 0;
 String StatusWifi, s_aux = "", sinalWifi;
 String lotes[500] = {"", "", ""};
@@ -29,7 +29,6 @@ clock_t tConfirmLote, tLoop, ttimeUltLote = 0;
 time_t timeServerAtu, timeServerAtuRn, timeNow, timeServerDif, timeServer, timeServerResetNullptr, timeFimLote, timeIniLote = 0;
 struct tm *dataNow;
 SemaphoreHandle_t httpMutex = xSemaphoreCreateMutex();
-
 
 time_t getTime_t()
 {
@@ -124,43 +123,43 @@ void handleRoot()
                                                         "<br> Clock:  " +
             String(clock()) + " "
                               "<br> Dado: " +
-            String(apontamentos) + " "
+            String(inf_apt) + " "
 
-                                   "<br><script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>"
-                                   "<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>"
-                                   "<input type='file' name='update'>"
-                                   "<input type='submit' value='Update'>"
-                                   "</form>"
-                                   "<div id='prg'>progress: 0%</div>"
-                                   "<script>"
-                                   "$('form').submit(function(e){"
-                                   "e.preventDefault();"
-                                   "var form = $('#upload_form')[0];"
-                                   "var data = new FormData(form);"
-                                   " $.ajax({"
-                                   "url: '/update',"
-                                   "type: 'POST',"
-                                   "data: data,"
-                                   "contentType: false,"
-                                   "processData:false,"
-                                   "xhr: function() {"
-                                   "var xhr = new window.XMLHttpRequest();"
-                                   "xhr.upload.addEventListener('progress', function(evt) {"
-                                   "if (evt.lengthComputable) {"
-                                   "var per = evt.loaded / evt.total;"
-                                   "$('#prg').html('progress: ' + Math.round(per*100) + '%');"
-                                   "}"
-                                   "}, false);"
-                                   "return xhr;"
-                                   "},"
-                                   "success:function(d, s) {"
-                                   "console.log('success!')"
-                                   "},"
-                                   "error: function (a, b, c) {"
-                                   "}"
-                                   "});"
-                                   "});"
-                                   "</script>";
+                              "<br><script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>"
+                              "<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>"
+                              "<input type='file' name='update'>"
+                              "<input type='submit' value='Update'>"
+                              "</form>"
+                              "<div id='prg'>progress: 0%</div>"
+                              "<script>"
+                              "$('form').submit(function(e){"
+                              "e.preventDefault();"
+                              "var form = $('#upload_form')[0];"
+                              "var data = new FormData(form);"
+                              " $.ajax({"
+                              "url: '/update',"
+                              "type: 'POST',"
+                              "data: data,"
+                              "contentType: false,"
+                              "processData:false,"
+                              "xhr: function() {"
+                              "var xhr = new window.XMLHttpRequest();"
+                              "xhr.upload.addEventListener('progress', function(evt) {"
+                              "if (evt.lengthComputable) {"
+                              "var per = evt.loaded / evt.total;"
+                              "$('#prg').html('progress: ' + Math.round(per*100) + '%');"
+                              "}"
+                              "}, false);"
+                              "return xhr;"
+                              "},"
+                              "success:function(d, s) {"
+                              "console.log('success!')"
+                              "},"
+                              "error: function (a, b, c) {"
+                              "}"
+                              "});"
+                              "});"
+                              "</script>";
 
         xSemaphoreGive(httpMutex);
         server.sendHeader("Connection", "close");
@@ -274,6 +273,39 @@ void handleconfirmLotes()
     }
 }
 
+bool procura_AptLote(String apt)
+{
+    if (id_prxlote > 0)
+    {
+        char sub[255];
+        int pos = 0;
+        String atual = lotes[id_prxlote - 1]; //ultimo lote
+        for (int a = 0; a < atual.length() && lotes[id_prxlote - 1] != "."; a++)
+        {
+            if (atual[a] != '|')
+                sub[pos++] = atual[a];
+            else
+            {
+                sub[pos++] = atual[a]; //Para adiciona o pipe
+                sub[pos] = '\0';       //para que se torne uma string legivel
+
+                if (apt.compareTo(sub) == 0)
+                {
+                    //Serial.println("encontrou apontamente no lote ultimo");
+                    return true; //encontrou o apontamento no ultimo lote
+                }
+                else
+                {
+                    sub[0] = '\0'; //para garantir que limpou
+                    pos = 0;
+                }
+            }
+        }
+        return false;
+    }
+    return false;
+}
+
 void gravaLote()
 {
     struct tm *dattime;
@@ -286,11 +318,11 @@ void gravaLote()
                 timeServer = timeServer - (TQL / 1000);
             else
                 timeServer = timeServer - timeServerDif;
-            //return false;
         }
 
         if (timeServer != 0)
-        {                         // grava lote pois esta com data atualizada
+        {
+            // grava lote pois esta com data atualizada
             if (timeFimLote == 0) // siginifica que a data atualizou a variavel timeServer pore ainda nao atualizou a variavel timeFimLote   ai vou calcular as datas para nao mandar 1970 porem todo o tempo que o esp ficar desligado nao tera atualizacao
                 timeIniLote = timeServer;
             else
@@ -312,25 +344,48 @@ void gravaLote()
             }
             dattime = localtime(&timeFimLote);
             String s_aux1 = apontamentos + "|";
-            //Procurar nos lotes se ja tem o apontamento.
-            //if(sizeof(lotes[id_prxlote]) - sizeof(s_aux1) < 0 || (lotes[id_prxlote] != s_aux1 && lotes[id_prxlote].substring(sizeof(lotes[id_prxlote]) - sizeof(s_aux1), sizeof(lotes[id_prxlote])) != s_aux1))//verificar substring
-            if(lotes[id_prxlote] != s_aux1)
+            //o indice do lotes é maior que 0 E o s_aux1 tem o codigo de barras E o
+            //procura lotes nao encontrou esse codigo de barras no ultimo lote
+            if (s_aux1.length() > 1 && !procura_AptLote(s_aux1))
             {
-              if(lotes[id_prxlote] == ".")
-              {
-                lotes[id_prxlote] = s_aux1;
-              }
-              else
-              {
-                lotes[id_prxlote] += s_aux1;
-              }
-              
-              if ((clock() - tConfirmLote < TQL) || sizeof(lotes[id_prxlote]) + sizeof(s_aux1) > 255)
-              {//Nao esta em contigencia, ou atingiu o tamanho limite do lote
-                id_prxlote = id_prxlote + 1;
-              }
+                //Serial.println("nao encontrou apontamente no ultimo lote");
+                if (lotes[id_prxlote] == ".")
+                {
+                    lotes[id_prxlote] = s_aux1;
+                    //Serial.println("gravou apontamento no lote e nao esta em contigencia");
+                }
+                else
+                {
+                    lotes[id_prxlote] += s_aux1;
+                    //Serial.println("gravou apontamento no lote e esta em contigencia");
+                }
+                //Nao esta em contigencia, ou atingiu o tamanho limite do lote
+                if ((clock() - tConfirmLote < TQL) || lotes[id_prxlote].length() > 255)
+                {
+                    id_prxlote = id_prxlote + 1; //Atualiza o indice do lote
+                }
             }
-            
+            else
+            {
+                //s_aux1 tem o codigo de barras E esta em contigencia
+                if (s_aux1.length() > 1 && clock() - tConfirmLote > TQL)
+                {
+                    //verifica se o tamanho do ultimo lote mais o lote atual estoura a memoria
+                    if (lotes[id_prxlote].length() + s_aux1.length() > 255)
+                    {
+                        id_prxlote = id_prxlote + 1; //Atualiza o indice do lote
+                    }
+                    if (lotes[id_prxlote] == ".")
+                    {
+                        lotes[id_prxlote] = s_aux1;
+                    }
+                    else
+                    {
+                        lotes[id_prxlote] += s_aux1;
+                    }
+                }
+            }
+            apontamentos.clear();
         }
     }
     catch (...)
