@@ -96,7 +96,7 @@ void loop()
       delay(200);
     }
     val_sensor = digitalRead(ent_sensor);
-    if(val_sensor == 0 && apontamentos.length() > 0)
+    if((val_sensor == 0 && apontamentos.length() > 0))
     {
       gravaLote();
       espera = true;
