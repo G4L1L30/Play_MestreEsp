@@ -93,14 +93,15 @@ void loop()
     timeNow = getTime_t();
     dataNow = localtime(&timeNow);
 
+    val_sensor = digitalRead(ent_sensor);
     for (int i = 0; i < tam_slave && !espera; i++)
     {
       escravo(slave[i]);
+      envia_Sensor(val_sensor, slave[i]);
       delay(200);
     }
 
-    val_sensor = digitalRead(ent_sensor);
-    if ((val_sensor == 0 && apontamentos.length() > 0)) //Sensor Funcionando OK
+    if (val_sensor == 0 && apontamentos.length() > 0) //Sensor Funcionando OK
     {
       result = gravaLote();
       espera = true;
@@ -110,7 +111,6 @@ void loop()
       if (apontamentos.length() > 0 && val_sensor == 1)
       {
         aux_apt = apontamentos;
-        ;
         aux_apt += "|";
         if (id_prxlote > 0)
         {
@@ -134,7 +134,7 @@ void loop()
       }
     }
 
-    if (result == 0)
+    /*if (result == 0)
     {
       Serial.println("Timer igual 0, fazer um getLog");
     }
@@ -145,19 +145,16 @@ void loop()
         Serial.println("Apontamento nao realizado pois todos os lotes estavam cheios!");
         //Disparar Alerta
       }
-    }
+    }*/
 
     if (val_sensor == 1)
     {
       espera = false;
     }
 
-    if (apontamentos.length() > 0)
-    {
-      apontamentos.clear();
-    }
+    apontamentos.clear();
 
-    delay(2);
+    delay(20);
     tLoop = millis() - tLoop;
   }
   catch (...)

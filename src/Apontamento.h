@@ -176,3 +176,19 @@ void escravo(int slave)
     reset(slave);
   }
 }
+
+
+void envia_Sensor(int valor, int slave)
+{
+  int dado;
+  if(valor == 0)
+    dado = 2;
+  else
+  {
+    dado = 3;
+  }
+  Wire.beginTransmission(slave);   //abre a transmissao
+  Wire.write(dado);                   // pergunta se tem dado
+  Wire.endTransmission(); //fecha a transmissao e confirma que o maix bit esta vivo
+  
+}
