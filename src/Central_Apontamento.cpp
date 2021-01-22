@@ -5,6 +5,8 @@ extern "C" // MEDE TEMPERATURA INTERNA DO ESP32
 }
 #include "Conexao.h"
 bool espera;
+int result;
+String aux_apt;
 
 //TASC NO COR ZERO DO ESP
 //void setupfileSistem(void * pvParameters){
@@ -61,7 +63,7 @@ void setup()
   try
   {
     inicia_PinMode();
-    pinMode(ent_sensor, INPUT);
+    pinMode(ent_sensor, INPUT_PULLUP);
     espera = false;
 
     Serial.begin(115200);
@@ -90,22 +92,71 @@ void loop()
 
     timeNow = getTime_t();
     dataNow = localtime(&timeNow);
+
     for (int i = 0; i < tam_slave && !espera; i++)
     {
       escravo(slave[i]);
       delay(200);
     }
+
     val_sensor = digitalRead(ent_sensor);
-    if((val_sensor == 0 && apontamentos.length() > 0))
+    if ((val_sensor == 0 && apontamentos.length() > 0)) //Sensor Funcionando OK
     {
-      gravaLote();
+      result = gravaLote();
       espera = true;
     }
-    if(val_sensor == 1)
-      espera = false;
+    else //Sensor com Problema
+    {
+      if (apontamentos.length() > 0 && val_sensor == 1)
+      {
+        aux_apt = apontamentos;
+        ;
+        aux_apt += "|";
+        if (id_prxlote > 0)
+        {
+          if (aux_apt != lotes[id_prxlote - 1])
+            result = gravaLote();
+        }
+        else
+        {
+          if (id_prxlote == 0)
+          {
+            if (aux_apt != lotes[limiteVetor])
+              result = gravaLote();
+          }
+          else
+          {
+            if (id_prxlote == limiteVetor)
+              if (aux_apt != lotes[0])
+                result = gravaLote();
+          }
+        }
+      }
+    }
 
-    apontamentos.clear();
-      
+    if (result == 0)
+    {
+      Serial.println("Timer igual 0, fazer um getLog");
+    }
+    else
+    {
+      if (result == 1)
+      {
+        Serial.println("Apontamento nao realizado pois todos os lotes estavam cheios!");
+        //Disparar Alerta
+      }
+    }
+
+    if (val_sensor == 1)
+    {
+      espera = false;
+    }
+
+    if (apontamentos.length() > 0)
+    {
+      apontamentos.clear();
+    }
+
     delay(2);
     tLoop = millis() - tLoop;
   }

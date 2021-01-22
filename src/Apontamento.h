@@ -14,7 +14,7 @@ int log_reset[2] = {0, 0};
 int val_sensor;
 
 char dado[50];
-String apontamentos, inf_apt;
+String apontamentos, inf_apt, erros_apt;
 int conta = 0, ativo;
 
 int tam_slave = sizeof(slave) / sizeof(int);

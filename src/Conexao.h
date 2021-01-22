@@ -275,9 +275,13 @@ void handleconfirmLotes()
     }
 }
 
-void gravaLote()
+int gravaLote()
 {
     struct tm *dattime;
+    // 0 -> timer errado
+    // 1 -> todos os lotes cheio
+    // 2 -> gravado com sucesso
+    int grava = 0, cont = 0;
     try
     {
         //if (timeServerDif > 0 && CD1 <= 0 ) { // a data do  ESP e maior entao devemos controlar a geracao dos lotes ate a data sincronizar
@@ -313,15 +317,18 @@ void gravaLote()
             }
             dattime = localtime(&timeFimLote);
             String s_aux1 = apontamentos + "|";
-            //o indice do lotes é maior que 0 E o s_aux1 tem o codigo de barras E o
-            //procura lotes nao encontrou esse codigo de barras no ultimo lote
-            if (s_aux1.length() > 1)
+            
+            while(lotes[id_prxlote].length() + s_aux1.length() > 541 && cont < 2)
             {
-                //atingiu o tamanho limite do lote
-                if (lotes[id_prxlote].length() + s_aux1.length() > 255)
+                id_prxlote = id_prxlote + 1;
+                if(id_prxlote == limiteVetor && lotes[id_prxlote].length() + s_aux1.length() > 541)
                 {
-                    id_prxlote = id_prxlote + 1; //Atualiza o indice do lote
+                    id_prxlote = 0;
+                    cont++; //pois se contar mais de 1 vez significa que todos os lotes estao cheio
                 }
+            }
+            if(cont < 2)
+            {
                 //Serial.println("nao encontrou apontamente no ultimo lote");
                 if (lotes[id_prxlote] == ".")
                 {
@@ -334,18 +341,29 @@ void gravaLote()
                     //Serial.println("gravou apontamento no lote e esta em contigencia");
                 }
                 //Nao esta em contigencia, ou atingiu o tamanho limite do lote
-                if ((clock() - tConfirmLote < TQL) || lotes[id_prxlote].length() > 255)
+                if ((clock() - tConfirmLote < TQL) || lotes[id_prxlote].length() > 541)
                 {
                     id_prxlote = id_prxlote + 1; //Atualiza o indice do lote
                 }
-                
+                grava = 2;
+                erros_apt = "Apontamento realizado com sucesso";
             }
+            else
+            {
+                grava = 1;
+                erros_apt = "Apontamento nao realizado pois todos os lotes estavam cheio";
+            }
+        }
+        else
+        {
+            erros_apt = "Timer igual 0, fazer um getLog";
         }
     }
     catch (...)
     {
         resetModule();
     }
+    return grava;
 }
 
 void handlelog()
@@ -371,6 +389,7 @@ void handlelog()
         html += " timeNow               =" + String(timeNow) + "<br>";
         html += " timeFimLote           =" + String(timeFimLote) + "<br>";
         html += " timeIniLote           =" + String(timeIniLote) + "<br>";
+        html += " Erros                 =" + erros_apt + "<br>";
         //html += " StatusWifi            =" + String(StatusWifi) + "<br>";
         //html += " sinalWifi            =" + String(sinalWifi) + "<br>";
         //VETORES
@@ -386,6 +405,7 @@ void handlelog()
         server.send(20000, "text/html", html);
 
         xSemaphoreGive(httpMutex);
+        erros_apt.clear();
     }
     catch (...)
     {
