@@ -94,11 +94,15 @@ void loop()
     dataNow = localtime(&timeNow);
 
     val_sensor = digitalRead(ent_sensor);
-    for (int i = 0; i < tam_slave && !espera; i++)
+    for (int i = 0; i < tam_slave; i++)
     {
-      escravo(slave[i]);
       envia_Sensor(val_sensor, slave[i]);
-      delay(200);
+    }
+
+    if(!espera)
+    {
+      escravo(slave[0]);
+      escravo(slave[1]);
     }
 
     if (val_sensor == 0 && apontamentos.length() > 0) //Sensor Funcionando OK
@@ -108,6 +112,7 @@ void loop()
     }
     else //Sensor com Problema
     {
+      
       if (apontamentos.length() > 0 && val_sensor == 1)
       {
         aux_apt = apontamentos;
@@ -154,7 +159,8 @@ void loop()
 
     apontamentos.clear();
 
-    delay(20);
+    
+    delay(200);
     tLoop = millis() - tLoop;
   }
   catch (...)
