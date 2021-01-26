@@ -318,6 +318,7 @@ int gravaLote()
             dattime = localtime(&timeFimLote);
             String s_aux1 = apontamentos + "|";
             
+            
             while(lotes[id_prxlote].length() + s_aux1.length() > 541 && cont < 2)
             {
                 id_prxlote = id_prxlote + 1;

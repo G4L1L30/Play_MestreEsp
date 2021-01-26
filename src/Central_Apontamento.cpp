@@ -115,7 +115,9 @@ void loop()
       
       if (apontamentos.length() > 0 && val_sensor == 1)
       {
-        aux_apt = apontamentos;
+        result = gravaLote();
+        //Nao tenho certeza se precisa! VERIFICAR COM O ANGELO
+        /*aux_apt = apontamentos;
         aux_apt += "|";
         if (id_prxlote > 0)
         {
@@ -135,7 +137,7 @@ void loop()
               if (aux_apt != lotes[0])
                 result = gravaLote();
           }
-        }
+        }*/
       }
     }
 
@@ -160,7 +162,7 @@ void loop()
     apontamentos.clear();
 
     
-    delay(200);
+    delay(400);
     tLoop = millis() - tLoop;
   }
   catch (...)
