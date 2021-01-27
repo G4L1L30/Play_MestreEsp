@@ -57,7 +57,6 @@ void setupcoreZero(void *pvParameters)
     resetModule();
   }
 }
-
 void setup()
 {
   try
@@ -65,9 +64,9 @@ void setup()
     inicia_PinMode();
     pinMode(ent_sensor, INPUT_PULLUP);
     Serial.begin(115200);
-    pinMode(SDA, INPUT_PULLUP);
-    pinMode(SCL, INPUT_PULLUP);
-    Wire.begin(SDA, SCL);
+    pinMode(SDA, INPUT);
+    pinMode(SCL, INPUT);
+    Wire.begin(SDA, SCL, 400000);
     espera = false;
     xTaskCreatePinnedToCore(setupcoreZero, "setupcoreZero", 8192, NULL, 0, NULL, 0);
     // configura WatchDog
@@ -77,6 +76,28 @@ void setup()
   {
     resetModule();
   }
+}
+
+bool procura_iguais(String atual)
+{
+  String aux = lotes[id_prxlote], comparar;
+  int pos = 0;
+  for(int i = 0; i < aux.length(); i++)
+  {
+    comparar[pos++] = aux[i];
+    if(aux[i] == '|')
+    {
+      if(comparar == atual)
+        return true;
+      else
+      {
+        pos = 0;
+        comparar.clear();
+      }
+      
+    }
+  }
+  return false;
 }
 
 void loop()
@@ -92,10 +113,11 @@ void loop()
     timeNow = getTime_t();
     dataNow = localtime(&timeNow);
     val_sensor = digitalRead(ent_sensor);
-    for (int i = 0; i < tam_slave; i++)
-    {
-      envia_Sensor(val_sensor, slave[i]);
-    }
+     
+    envia_Sensor(val_sensor, slave[0]);
+    delay(50);
+    envia_Sensor(val_sensor, slave[1]);
+    delay(50);
     if (!espera)
     {
       escravo(slave[0]);
@@ -112,11 +134,18 @@ void loop()
     {
       if (apontamentos.length() > 0 && val_sensor == 1)
       {
-        result = gravaLote();
+        //result = gravaLote();
         //Nao tenho certeza se precisa! VERIFICAR COM O ANGELO
-        /*aux_apt = apontamentos;
+        aux_apt = apontamentos;
         aux_apt += "|";
-        if (id_prxlote > 0)
+        if(lotes[id_prxlote] == ".")
+          result = gravaLote();
+        else
+        {
+          if(!procura_iguais(aux_apt))
+            result = gravaLote();
+        }
+        /*if (id_prxlote > 0)
         {
           if (aux_apt != lotes[id_prxlote - 1])
             result = gravaLote();
