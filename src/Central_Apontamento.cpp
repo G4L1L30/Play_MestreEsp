@@ -64,10 +64,11 @@ void setup()
   {
     inicia_PinMode();
     pinMode(ent_sensor, INPUT_PULLUP);
-    espera = false;
-
     Serial.begin(115200);
+    pinMode(SDA, INPUT_PULLUP);
+    pinMode(SCL, INPUT_PULLUP);
     Wire.begin(SDA, SCL);
+    espera = false;
     xTaskCreatePinnedToCore(setupcoreZero, "setupcoreZero", 8192, NULL, 0, NULL, 0);
     // configura WatchDog
     setupWatchDog();
@@ -84,27 +85,24 @@ void loop()
   {
     tLoop = millis();
     loopWatchDog();
-
     if (loops == 0)
     {
       loops = millis();
     }
-
     timeNow = getTime_t();
     dataNow = localtime(&timeNow);
-
     val_sensor = digitalRead(ent_sensor);
     for (int i = 0; i < tam_slave; i++)
     {
       envia_Sensor(val_sensor, slave[i]);
     }
-
-    if(!espera)
+    if (!espera)
     {
       escravo(slave[0]);
+      delay(100);
       escravo(slave[1]);
+      delay(100);
     }
-
     if (val_sensor == 0 && apontamentos.length() > 0) //Sensor Funcionando OK
     {
       result = gravaLote();
@@ -112,7 +110,6 @@ void loop()
     }
     else //Sensor com Problema
     {
-      
       if (apontamentos.length() > 0 && val_sensor == 1)
       {
         result = gravaLote();
@@ -140,7 +137,6 @@ void loop()
         }*/
       }
     }
-
     /*if (result == 0)
     {
       Serial.println("Timer igual 0, fazer um getLog");
@@ -153,16 +149,12 @@ void loop()
         //Disparar Alerta
       }
     }*/
-
     if (val_sensor == 1)
     {
       espera = false;
     }
-
     apontamentos.clear();
-
-    
-    delay(400);
+    delay(100);
     tLoop = millis() - tLoop;
   }
   catch (...)

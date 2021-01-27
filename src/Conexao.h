@@ -19,11 +19,9 @@ long int loops = 0;
 String StatusWifi, s_aux = "", sinalWifi;
 String lotes[500] = {"", "", ""};
 bool dLote = true; // controla a quebra do lote para que data ini e data fim estejam no mesmo dia
-
 const char *ssid = "WIFICABONNET";
 const char *password = "forcaf123";
 const char *c_aux = "";
-
 ESP32WebServer server(80);
 clock_t tConfirmLote, tLoop, ttimeUltLote = 0;
 time_t timeServerAtu, timeServerAtuRn, timeNow, timeServerDif, timeServer, timeServerResetNullptr, timeFimLote, timeIniLote = 0;
@@ -160,7 +158,6 @@ void handleRoot()
                               "});"
                               "});"
                               "</script>";
-
         xSemaphoreGive(httpMutex);
         server.sendHeader("Connection", "close");
         server.send(200, "text/html", serverIndex);
@@ -182,12 +179,10 @@ void handlegetLotes()
         timeServerAtu = server.arg("d").toInt();
         timeServerAtuRn = time(nullptr);
         timeServerDif = getTime_t() - timeServerAtu;
-
         if (server.arg("tql") != "")
         {
             TQL = server.arg("tql").toInt() * 1000;
         }
-
         if (timeServer == 0)
         {
             timeServer = server.arg("d").toInt();
@@ -264,7 +259,7 @@ void handleconfirmLotes()
             s_aux = "Zero lotes enviados";
         }
         tConfirmLote = clock();
-        if(id_prxlote != 0)
+        if (id_prxlote != 0)
             id_prxlote = id_prxlote + 1;
         server.setContentLength(s_aux.length());
         server.send(200, "text/html", s_aux);
@@ -317,18 +312,16 @@ int gravaLote()
             }
             dattime = localtime(&timeFimLote);
             String s_aux1 = apontamentos + "|";
-            
-            
-            while(lotes[id_prxlote].length() + s_aux1.length() > 541 && cont < 2)
+            while (lotes[id_prxlote].length() + s_aux1.length() > 541 && cont < 2)
             {
                 id_prxlote = id_prxlote + 1;
-                if(id_prxlote == limiteVetor && lotes[id_prxlote].length() + s_aux1.length() > 541)
+                if (id_prxlote == limiteVetor && lotes[id_prxlote].length() + s_aux1.length() > 541)
                 {
                     id_prxlote = 0;
                     cont++; //pois se contar mais de 1 vez significa que todos os lotes estao cheio
                 }
             }
-            if(cont < 2)
+            if (cont < 2)
             {
                 //Serial.println("nao encontrou apontamente no ultimo lote");
                 if (lotes[id_prxlote] == ".")
@@ -401,10 +394,8 @@ void handlelog()
                 html += "lote[" + String(i) + "]    = " + lotes[i] + "<br>";
             }
         }
-
         server.setContentLength(html.length());
         server.send(20000, "text/html", html);
-
         xSemaphoreGive(httpMutex);
         erros_apt.clear();
     }
@@ -427,12 +418,10 @@ void handleResetSlave()
             delay(2000);
             resetModule();
         }
-
         String serverIndex =
             "<br> Quantidade de resete slave 0: " + String(log_reset[0]) + " "
                                                                            "<br> Quantidade de resete slave 1: " +
             String(log_reset[1]) + " ";
-
         xSemaphoreGive(httpMutex);
         server.sendHeader("Connection", "close");
         server.send(200, "text/html", serverIndex);
@@ -457,7 +446,6 @@ void setupWifiServer()
             IPAddress _subnet(subnet[0], subnet[1], subnet[2], subnet[3]);
             ETH.config(_ip, _gateway, _subnet);
         }
-
         //time_t timeout = millis() + 10000;
         server.on("/", handleRoot);
         server.on("/getLotes", handlegetLotes);
@@ -475,8 +463,8 @@ void setupWifiServer()
       if (upload.status == UPLOAD_FILE_START) {
         Serial.printf("Update: %s\n", upload.filename.c_str());
         timerAlarmDisable(timer);
-
-        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) //start with max available size
+        { 
           Update.printError(Serial);
         }
       }
@@ -494,7 +482,6 @@ void setupWifiServer()
           Update.printError(Serial);
         }
       } });
-
         // start the server
         server.begin();
     }

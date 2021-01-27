@@ -78,7 +78,6 @@ void escravo(int slave)
   char letra;
   char check[10], informacao[50];
   int cont_info = 0, val_check, check_info = 0;
-
   //VAI PERGUNTAR SE TEM DADO
   Wire.beginTransmission(slave);   //abre a transmissao
   Wire.write(0);                   // '0' pergunta se tem dado
@@ -89,13 +88,11 @@ void escravo(int slave)
     Serial.print(" 0x");
     Serial.print(slave, HEX);
     Serial.println(": Pergunta recebida!");
-
     Wire.requestFrom(slave, 1); //PEGANDO RESPOSTA
     if (Wire.available())
     {
       tam_resp = Wire.read(); //"Tamanho da resposta"
     }
-
     if (tam_resp > 0) //Maix Bit tem Dados
     {
       //Requisitando dados
@@ -106,7 +103,6 @@ void escravo(int slave)
         Serial.print("0x");
         Serial.print(slave, HEX);
         Serial.println(": Enviando dados!");
-
         Wire.requestFrom(slave, tam_resp); //PEGANDO RESPOSTA
         while (Wire.available() && cont_info < tam_resp)
         {
@@ -116,11 +112,9 @@ void escravo(int slave)
         }
         if (cont_info == tam_resp) //chegou todas as informações
         {
-          informacao[cont_info] = '\0'; //agora vira uma string que pode ser lida
-
+          informacao[cont_info] = '\0';           //agora vira uma string que pode ser lida
           String split = strtok(informacao, ","); //primeiro split, para pegar a informacao
           String check_sum = strtok(NULL, ",");   //segundo split, para pegar o check sum da mensagem original
-
           //converte o split para o dado
           for (i = 0; i < split.length(); i++)
           {
@@ -128,13 +122,11 @@ void escravo(int slave)
             check_info += (int)informacao[i]; //aqui faz o check sum da mensagem recebida, ou seja, soma os inteiro da mensagem que chegou
           }
           dado[i] = '\0'; //Aqui esta a informação pode ser lida
-
           //pega o check sum da mensagem original, ou seja, do segundo split e convert para uma string char para pode usar o atoi
           for (i = 0; i < check_sum.length(); i++)
             check[i] = check_sum[i];
           check[i] = '\0';
-          val_check = atoi(check); //Aqui pega o check original que vem da mensagem, converte para inteiro
-
+          val_check = atoi(check);     //Aqui pega o check original que vem da mensagem, converte para inteiro
           if (val_check == check_info) //se o check da mensagem origial for igual ao check que fez decodificando a mensagem entao exibe, ou seja, o dado é confiavel
           {
             Serial.print("0x");
@@ -177,18 +169,16 @@ void escravo(int slave)
   }
 }
 
-
 void envia_Sensor(int valor, int slave)
 {
   int dado;
-  if(valor == 0)
+  if (valor == 0)
     dado = 2;
   else
   {
     dado = 3;
   }
-  Wire.beginTransmission(slave);   //abre a transmissao
-  Wire.write(dado);                   // pergunta se tem dado
-  Wire.endTransmission(); //fecha a transmissao e confirma que o maix bit esta vivo
-  
+  Wire.beginTransmission(slave); //abre a transmissao
+  Wire.write(dado);              // pergunta se tem dado
+  Wire.endTransmission();        //fecha a transmissao e confirma que o maix bit esta vivo
 }
