@@ -15,7 +15,7 @@ int val_sensor;
 
 char dado[50];
 String apontamentos, inf_apt, erros_apt;
-int conta = 0, ativo;
+int conta = 0, ativo, ct_sensor = 0;
 
 int tam_slave = sizeof(slave) / sizeof(int);
 int tam_pin = sizeof(pin_reset) / sizeof(int);
@@ -169,11 +169,22 @@ void escravo(int slave)
   }
 }
 
+void sensor_ativo(int valor)
+{
+  if(valor == 0)
+  {
+    ct_sensor += 1; //Sempre que o sensor for acionado '0' ira contar 1, supondo-se que seja um palete
+    //Serial.print(ct_sensor);
+  }
+}
+    
 void envia_Sensor(int valor, int slave)
 {
   int dado;
   if (valor == 0)
+  {
     dado = 2;
+  }
   else
   {
     dado = 3;

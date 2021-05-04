@@ -27,6 +27,7 @@ clock_t tConfirmLote, tLoop, ttimeUltLote = 0;
 time_t timeServerAtu, timeServerAtuRn, timeNow, timeServerDif, timeServer, timeServerResetNullptr, timeFimLote, timeIniLote = 0;
 struct tm *dataNow;
 SemaphoreHandle_t httpMutex = xSemaphoreCreateMutex();
+int ct_ltApt = 0;
 
 time_t getTime_t()
 {
@@ -224,6 +225,20 @@ void handlegetLotes()
     }
 }
 
+int conta_AptLote(int index)
+{
+    int conta = 0;
+    String lote = lotes[index];
+    for(int i = 0; i < lote.length(); i++)
+    {
+        if(lote[i] == '|')
+        {
+            conta += 1;
+        }
+    }
+    return conta;
+}
+
 void handleconfirmLotes()
 {
     try
@@ -240,7 +255,27 @@ void handleconfirmLotes()
                 {
                     if (s_aux1 != "")
                     {
-                        // apaga arquivo
+                        
+                        ct_ltApt -= conta_AptLote(s_aux1.toInt());
+                        ct_sensor -= conta_AptLote(s_aux1.toInt());
+                        if(ct_sensor == ct_ltApt)
+                        {
+                            Serial.println("Tudo ok!");
+                        }
+                        else{
+                            if(ct_sensor > ct_ltApt)
+                            {
+                                Serial.print("O sensor contou mais: ");
+                                Serial.print(ct_sensor);
+                                Serial.println();
+                            }
+                            else{
+                                Serial.print("O apontamento contou mais: ");
+                                Serial.print(ct_ltApt);
+                                Serial.println();
+                            }
+                        }
+                        //apaga arquivo
                         lotes[s_aux1.toInt()] = ".";
                         xSemaphoreTake(httpMutex, portMAX_DELAY);
                         priFila = s_aux1.toInt() + 1;
@@ -327,11 +362,13 @@ int gravaLote()
                 if (lotes[id_prxlote] == ".")
                 {
                     lotes[id_prxlote] = s_aux1;
+                    ct_ltApt += 1;
                     //Serial.println("gravou apontamento no lote e nao esta em contigencia");
                 }
                 else
                 {
                     lotes[id_prxlote] += s_aux1;
+                    ct_ltApt += 1;
                     //Serial.println("gravou apontamento no lote e esta em contigencia");
                 }
                 //Nao esta em contigencia, ou atingiu o tamanho limite do lote
@@ -384,6 +421,8 @@ void handlelog()
         html += " timeFimLote           =" + String(timeFimLote) + "<br>";
         html += " timeIniLote           =" + String(timeIniLote) + "<br>";
         html += " Erros                 =" + erros_apt + "<br>";
+        html += " Contador Sensor       =" + String(ct_sensor) + "<br>";
+        html += " Contador Lotes        =" + String(ct_ltApt) + "<br>";
         //html += " StatusWifi            =" + String(StatusWifi) + "<br>";
         //html += " sinalWifi            =" + String(sinalWifi) + "<br>";
         //VETORES
